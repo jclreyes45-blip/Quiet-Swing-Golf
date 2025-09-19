@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiet Swing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fffe 0%, #f0f7f0 100%);
+            color: #2d4a3d;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(45, 74, 61, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a7c59 0%, #5d8b6a 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #4a7c59;
+            border-bottom: 3px solid #4a7c59;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2d4a3d;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4a7c59;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            accent-color: #4a7c59;
+        }
+
+        .checkbox-item label {
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4a7c59 0%, #5d8b6a 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 124, 89, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 124, 89, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #4a7c59;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4a7c59;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🏌️ Quiet Swing</h1>
+            <p>Track your golf shots with precision</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('log')">Log Shot</button>
+            <button class="nav-tab" onclick="switchTab('analytics')">Analytics</button>
+        </div>
+
+        <!-- Log Shot Screen -->
+        <div id="log-screen" class="screen active">
+            <div id="success-message" class="success-message" style="display: none;">
+                Shot logged successfully! 🏌️‍♂️
+            </div>
+
+            <form id="shot-form">
+                <div class="form-group">
+                    <label class="form-label" for="club">Club Used</label>
+                    <select id="club" class="form-control" required>
+                        <option value="">Select a club</option>
+                        <option value="Driver">Driver</option>
+                        <option value="5 wood">5 wood</option>
+                        <option value="Hybrid">Hybrid</option>
+                        <option value="4i">4i</option>
+                        <option value="5i">5i</option>
+                        <option value="6i">6i</option>
+                        <option value="7i">7i</option>
+                        <option value="8i">8i</option>
+                        <option value="9i">9i</option>
+                        <option value="PW">PW</option>
+                        <option value="UW">UW</option>
+                        <option value="54">54°</option>
+                        <option value="58">58°</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Shot Type</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="teebox" value="Teebox">
+                            <label for="teebox">Teebox</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fairway" value="Fairway">
+                            <label for="fairway">Fairway</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="rough" value="Rough">
+                            <label for="rough">Rough</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="uphill" value="Uphill">
+                            <label for="uphill">Uphill</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="downhill" value="Downhill">
+                            <label for="downhill">Downhill</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="ballAbove" value="Ball Above Feet">
+                            <label for="ballAbove">Ball Above Feet</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="ballBelow" value="Ball Below Feet">
+                            <label for="ballBelow">Ball Below Feet</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bunker" value="Fairway Bunker">
+                            <label for="bunker">Fairway Bunker</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="dispersion">Dispersion</label>
+                    <select id="dispersion" class="form-control" required>
+                        <option value="">Select dispersion</option>
+                        <option value="0">0 (Center)</option>
+                        <option value="1L">1L</option>
+                        <option value="1R">1R</option>
+                        <option value="2L">2L</option>
+                        <option value="2R">2R</option>
+                        <option value="3L">3L</option>
+                        <option value="3R">3R</option>
+                        <option value="4L">4L</option>
+                        <option value="4R">4R</option>
+                        <option value="5L">5L</option>
+                        <option value="5R">5R</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="notes">Notes</label>
+                    <textarea id="notes" class="form-control" rows="3" placeholder="Optional notes about the shot..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Shot</button>
+            </form>
+        </div>
+
+        <!-- Analytics Screen -->
+        <div id="analytics-screen" class="screen">
+            <div class="filter-section">
+                <h3 style="margin-bottom: 15px; color: #2d4a3d;">Filters</h3>
+                
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label class="form-label" for="startDate">Start Date</label>
+                        <input type="date" id="startDate" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="endDate">End Date</label>
+                        <input type="date" id="endDate" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="filterClubs">Clubs</label>
+                    <select id="filterClubs" class="form-control" multiple>
+                        <option value="Driver">Driver</option>
+                        <option value="5 wood">5 wood</option>
+                        <option value="Hybrid">Hybrid</option>
+                        <option value="4i">4i</option>
+                        <option value="5i">5i</option>
+                        <option value="6i">6i</option>
+                        <option value="7i">7i</option>
+                        <option value="8i">8i</option>
+                        <option value="9i">9i</option>
+                        <option value="PW">PW</option>
+                        <option value="UW">UW</option>
+                        <option value="54">54°</option>
+                        <option value="58">58°</option>
+                    </select>
+                    <small style="color: #6c757d;">Hold Ctrl/Cmd to select multiple</small>
+                </div>
+
+                <button onclick="updateAnalytics()" class="btn btn-secondary">Update Analytics</button>
+            </div>
+
+            <div id="analytics-content">
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Stats will be populated here -->
+                </div>
+
+                <div class="chart-container">
+                    <h4 style="margin-bottom: 15px; color: #2d4a3d;">Dispersion Distribution</h4>
+                    <canvas id="dispersionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data storage (in a real app, this would be in Google Sheets)
+        let shotData = JSON.parse(localStorage.getItem('golfShots') || '[]');
+
+        // Add some sample data if none exists
+        if (shotData.length === 0) {
+            shotData = [
+                {
+                    date: '2024-09-15',
+                    club: 'Driver',
+                    shotTypes: ['Teebox'],
+                    dispersion: '1L',
+                    notes: 'Good swing, slight pull'
+                },
+                {
+                    date: '2024-09-15',
+                    club: '7i',
+                    shotTypes: ['Fairway'],
+                    dispersion: '0',
+                    notes: 'Perfect strike'
+                },
+                {
+                    date: '2024-09-16',
+                    club: 'Driver',
+                    shotTypes: ['Teebox'],
+                    dispersion: '2R',
+                    notes: 'Slight fade'
+                },
+                {
+                    date: '2024-09-16',
+                    club: 'PW',
+                    shotTypes: ['Rough'],
+                    dispersion: '1L',
+                    notes: 'Difficult lie'
+                }
+            ];
+            localStorage.setItem('golfShots', JSON.stringify(shotData));
+        }
+
+        let currentChart = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update screens
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            document.getElementById(tabName + '-screen').classList.add('active');
+
+            if (tabName === 'analytics') {
+                initializeAnalytics();
+            }
+        }
+
+        // Form submission
+        document.getElementById('shot-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const club = document.getElementById('club').value;
+            const dispersion = document.getElementById('dispersion').value;
+            const notes = document.getElementById('notes').value;
+            
+            // Get checked shot types
+            const shotTypes = [];
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                shotTypes.push(checkbox.value);
+            });
+
+            // Create new shot entry
+            const newShot = {
+                date: new Date().toISOString().split('T')[0],
+                club: club,
+                shotTypes: shotTypes,
+                dispersion: dispersion,
+                notes: notes,
+                timestamp: new Date().toISOString()
+            };
+
+            // Add to data and save
+            shotData.push(newShot);
+            localStorage.setItem('golfShots', JSON.stringify(shotData));
+
+            // Show success message
+            document.getElementById('success-message').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('success-message').style.display = 'none';
+            }, 3000);
+
+            // Reset form
+            this.reset();
+
+            // In a real app, this would send to Google Sheets
+            console.log('Shot logged:', newShot);
+        });
+
+        // Initialize analytics
+        function initializeAnalytics() {
+            // Set default date range (last month)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 1);
+            
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+
+            // Select all clubs by default
+            const clubSelect = document.getElementById('filterClubs');
+            for (let option of clubSelect.options) {
+                option.selected = true;
+            }
+
+            updateAnalytics();
+        }
+
+        // Update analytics based on filters
+        function updateAnalytics() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const selectedClubs = Array.from(document.getElementById('filterClubs').selectedOptions).map(option => option.value);
+
+            // Filter data
+            let filteredData = shotData.filter(shot => {
+                const shotDate = shot.date;
+                const dateInRange = (!startDate || shotDate >= startDate) && (!endDate || shotDate <= endDate);
+                const clubMatch = selectedClubs.length === 0 || selectedClubs.includes(shot.club);
+                return dateInRange && clubMatch;
+            });
+
+            if (filteredData.length === 0) {
+                document.getElementById('analytics-content').innerHTML = '<div class="no-data">No data available for selected filters</div>';
+                return;
+            }
+
+            // Calculate dispersion percentages
+            const dispersionCounts = {};
+            const totalShots = filteredData.length;
+
+            filteredData.forEach(shot => {
+                dispersionCounts[shot.dispersion] = (dispersionCounts[shot.dispersion] || 0) + 1;
+            });
+
+            const dispersionPercentages = {};
+            Object.keys(dispersionCounts).forEach(dispersion => {
+                dispersionPercentages[dispersion] = Math.round((dispersionCounts[dispersion] / totalShots) * 100);
+            });
+
+            // Update stats grid
+            updateStatsGrid(dispersionPercentages, totalShots);
+
+            // Update chart
+            updateChart(dispersionPercentages);
+        }
+
+        function updateStatsGrid(percentages, totalShots) {
+            const statsGrid = document.getElementById('stats-grid');
+            const sortedDisp = Object.entries(percentages).sort((a, b) => b[1] - a[1]);
+            
+            let html = `<div class="stat-card">
+                <div class="stat-value">${totalShots}</div>
+                <div class="stat-label">Total Shots</div>
+            </div>`;
+
+            sortedDisp.slice(0, 5).forEach(([dispersion, percentage]) => {
+                html += `<div class="stat-card">
+                    <div class="stat-value">${percentage}%</div>
+                    <div class="stat-label">${dispersion}</div>
+ 
