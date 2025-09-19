@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiet Swing</title>
+    <title>Quiet Swing - Golf Tracking App</title>
+    <meta name="theme-color" content="#4a7c59">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -444,14 +447,23 @@
         function switchTab(tabName) {
             // Update nav tabs
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            // Find the clicked tab and make it active
+            const clickedTab = Array.from(document.querySelectorAll('.nav-tab')).find(tab => 
+                tab.textContent.toLowerCase().includes(tabName)
+            );
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            }
 
             // Update screens
             document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
             document.getElementById(tabName + '-screen').classList.add('active');
 
             if (tabName === 'analytics') {
-                initializeAnalytics();
+                setTimeout(() => {
+                    initializeAnalytics();
+                }, 100);
             }
         }
 
@@ -567,4 +579,78 @@
                 html += `<div class="stat-card">
                     <div class="stat-value">${percentage}%</div>
                     <div class="stat-label">${dispersion}</div>
- 
+                </div>`;
+            });
+
+            statsGrid.innerHTML = html;
+        }
+
+        function updateChart(percentages) {
+            const ctx = document.getElementById('dispersionChart').getContext('2d');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const labels = Object.keys(percentages).sort();
+            const data = labels.map(label => percentages[label]);
+            
+            // Color mapping for golf dispersion
+            const colors = labels.map(label => {
+                if (label === '0') return '#4a7c59'; // Center - green
+                if (label.includes('L')) return '#e74c3c'; // Left - red
+                if (label.includes('R')) return '#3498db'; // Right - blue
+                return '#95a5a6'; // Default - gray
+            });
+
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Dispersion %',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color + '80'),
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: {
+                                color: '#f0f0f0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set canvas height
+            document.getElementById('dispersionChart').height = 200;
+        });
+    </script>
+</body>
+</html>
